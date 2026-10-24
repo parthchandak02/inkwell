@@ -10,8 +10,9 @@ type InkwellChromeProps = {
   wind: WindSnapshot;
 };
 
+// Open-Meteo reports where the wind comes FROM; the arrow shows where the ink drifts TO.
 function compassRotation(direction: number): number {
-  return direction;
+  return direction + 180;
 }
 
 function formatDirection(direction: number): string {

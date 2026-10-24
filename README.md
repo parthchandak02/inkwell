@@ -68,8 +68,8 @@ npm run build    # typecheck, then static site in dist/
 npm test         # unit and integrity checks
 ```
 
-The build is a static `dist/` folder. `inkwell.parthchandak.info` currently serves a different,
-dark-themed wind-particle piece, not this build.
+The build is a static `dist/` folder. This version is not deployed: `inkwell.parthchandak.info`
+serves "Wind Garden", a later dark-themed rebuild whose source is not in this repo.
 
 <details>
 <summary><b>Project layout</b></summary>
