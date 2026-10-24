@@ -49,7 +49,7 @@ type InkwellProductProps = {
 };
 
 export function InkwellProduct({ onReady }: InkwellProductProps): React.JSX.Element {
-  const { state } = useToolcraft();
+  const { dispatch, state } = useToolcraft();
   const hue = Number(useToolcraftValue("ink.hue") ?? 220);
   const saturation = Number(useToolcraftValue("ink.saturation") ?? 68);
   const viscosity = Number(useToolcraftValue("ink.viscosity") ?? 90);
@@ -95,6 +95,37 @@ export function InkwellProduct({ onReady }: InkwellProductProps): React.JSX.Elem
     [flowStrength, gravity, hue, particleCount, particleSize, saturation, viscosity, wind],
   );
 
+  // Fit the whole output frame into the visible window, left of the controls panel when
+  // there is room, so the wind readout in the top-left corner is never cut off
+  const frameWidth = state.canvas.size.width;
+  const frameHeight = state.canvas.size.height;
+  React.useEffect(() => {
+    const fit = (): void => {
+      const viewport = containerRef.current?.closest<HTMLElement>("[data-slot='toolcraft-runtime-canvas']");
+      if (!viewport || !frameWidth || !frameHeight) return;
+      const r = viewport.getBoundingClientRect();
+      const left = Math.max(r.left, 0);
+      const top = Math.max(r.top, 0);
+      let right = Math.min(r.right, window.innerWidth);
+      const bottom = Math.min(r.bottom, window.innerHeight);
+      const panel = document.querySelector<HTMLElement>("[data-slot='toolcraft-runtime-panel-host']");
+      const panelLeft = panel?.getBoundingClientRect().left ?? right;
+      if (panelLeft < right && panelLeft - left > 600) right = panelLeft - 12;
+      const visW = right - left;
+      const visH = bottom - top;
+      if (visW <= 0 || visH <= 0) return;
+      const zoom = Math.max(25, Math.min(100, Math.floor(Math.min(visW / frameWidth, visH / frameHeight) * 100)));
+      dispatch({
+        type: "canvas.setViewport",
+        offset: { x: left + visW / 2 - (r.left + r.width / 2), y: top + visH / 2 - (r.top + r.height / 2) },
+        zoom,
+      });
+    };
+    fit();
+    window.addEventListener("resize", fit);
+    return () => window.removeEventListener("resize", fit);
+  }, [dispatch, frameWidth, frameHeight]);
+
   React.useEffect(() => {
     let cancelled = false;
 
@@ -124,12 +155,11 @@ export function InkwellProduct({ onReady }: InkwellProductProps): React.JSX.Elem
     }
 
     const resize = (): void => {
-      const rect = container.getBoundingClientRect();
+      // Layout size of the output frame, unaffected by the viewport zoom transform
+      const rect = { width: container.clientWidth, height: container.clientHeight };
       const pixelRatio = Math.min(window.devicePixelRatio || 1, 2) * (getRenderScale(state.values) / 2);
       canvas.width = Math.max(1, Math.round(rect.width * pixelRatio));
       canvas.height = Math.max(1, Math.round(rect.height * pixelRatio));
-      canvas.style.width = `${rect.width}px`;
-      canvas.style.height = `${rect.height}px`;
       simulationRef.current.resize(rect.width, rect.height, pixelRatio);
 
       if (!warmedRef.current && rect.width > 0 && rect.height > 0) {
@@ -207,10 +237,12 @@ export function InkwellProduct({ onReady }: InkwellProductProps): React.JSX.Elem
       return { x: 0, y: 0 };
     }
 
+    // The frame may be zoomed to fit the window; convert screen pixels to canvas units
     const rect = canvas.getBoundingClientRect();
+    const scale = rect.width / (canvas.clientWidth || rect.width) || 1;
     return {
-      x: clientX - rect.left,
-      y: clientY - rect.top,
+      x: (clientX - rect.left) / scale,
+      y: (clientY - rect.top) / scale,
     };
   }, []);
 
