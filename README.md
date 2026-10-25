@@ -16,6 +16,7 @@
 
 </h6>
 
+<a href="https://inkwell.parthchandak.info"><b>Live demo</b></a> ·
 <a href="#how-it-works"><b>How it works</b></a> ·
 <a href="#controls"><b>Controls</b></a> ·
 <a href="#run-it"><b>Run it</b></a>
@@ -68,8 +69,8 @@ npm run build    # typecheck, then static site in dist/
 npm test         # unit and integrity checks
 ```
 
-The build is a static `dist/` folder. This version is not deployed: `inkwell.parthchandak.info`
-serves "Wind Garden", a later dark-themed rebuild whose source is not in this repo.
+The build is a static `dist/` folder, deployed to Cloudflare Pages at
+[inkwell.parthchandak.info](https://inkwell.parthchandak.info).
 
 <details>
 <summary><b>Project layout</b></summary>
