@@ -1,44 +1,55 @@
 import { describe, expect, it } from "vitest";
 
+import {
+  appAcceptance,
+  validateProductAcceptanceCoverage,
+} from "./app-acceptance";
 import { appPerformance } from "./app-performance";
 import { appSchema } from "./app-schema";
 
 describe("appSchema", () => {
-  it("publishes the inkwell product canvas contract", () => {
-    expect(appSchema.canvas.draggable).toBe(false);
-    expect(appSchema.canvas.enabled).toBe(true);
-    expect(appSchema.canvas.renderScale).toBe(true);
-    expect(appSchema.canvas.sizing).toEqual({ mode: "editable-output" });
+  it("keeps runtime Settings first, then Inkwell's Place, Wind and Ink sections", () => {
+    const titles = appSchema.panels.controls?.sections.map((section) => section.title) ?? [];
+    expect(titles.indexOf("Settings")).toBeLessThan(titles.indexOf("Place"));
+    expect(titles.indexOf("Place")).toBeLessThan(titles.indexOf("Wind"));
+    expect(titles).toContain("Image Export");
+  });
+
+  it("uses an editable 1920x1080 still output with render scale and no uploads or timeline", () => {
+    expect(appSchema.canvas.sizing).toMatchObject({ mode: "editable-output" });
     expect(appSchema.canvas.upload).toBe(false);
-    expect(appSchema.panels.layers).toBeUndefined();
-    expect(appSchema.panels.timeline).toBeUndefined();
-    expect(appSchema.toolbar).toEqual({
-      history: true,
-      radar: true,
-      zoom: true,
-    });
+    expect(appSchema.canvas.renderScale.enabled).toBe(true);
+    expect(appSchema.canvas.size).toMatchObject({ height: 1080, width: 1920 });
+    expect(appSchema.assembly.capabilities).not.toContain("timeline.playback");
   });
 
-  it("exposes ink controls, background, image export, and export actions", () => {
-    const titles =
-      appSchema.panels.controls?.sections
-        .filter((section) => section.title !== "Setup")
-        .map((section) => section.title) ?? [];
-
-    expect(titles).toEqual(["Ink", "Background", "Image Export", "Export"]);
-    expect(appSchema.panels.controls?.sections.find((section) => section.title === "Ink")?.controls.inkHue).toMatchObject({
-      target: "ink.hue",
-      type: "slider",
-    });
-    expect(appSchema.panels.controls?.sections.find((section) => section.title === "Export")?.controls.exportActions).toMatchObject({
-      target: "panel.actions",
-      type: "panelActions",
-    });
-  });
-
-  it("declares product performance workload coverage", () => {
-    expect(appPerformance.usesCustomRenderer).toBe(true);
+  it("derives one performance scenario per canonical path", () => {
     expect(appPerformance.scenarios.length).toBeGreaterThan(0);
-    expect(appPerformance.workloadTargets).toContain("ink.particleCount");
+    expect(new Set(appPerformance.scenarios.map((scenario) => scenario.pathId)).size).toBe(appPerformance.scenarios.length);
+  });
+
+  it("declares production reload coverage for the starter schema", () => {
+    expect(appSchema.persistence.storage).toBe("localStorage");
+    if (appSchema.persistence.storage !== "localStorage") {
+      throw new Error(
+        "The starter must persist user settings in localStorage.",
+      );
+    }
+    expect(appSchema.persistence.include).toContain("canvas");
+    expect(
+      appAcceptance.find((entry) => entry.id === "persistence.reload"),
+    ).toMatchObject({
+      automated: true,
+      browser: {
+        budget: "extended-io",
+        file: "e2e/product-inkwell-persistence.spec.ts",
+      },
+      evidence: "persistence-state",
+      kind: "runtime",
+      persistenceCoverage: "reload",
+      persistenceSlices: appSchema.persistence.include,
+      target: "canvas.size.width",
+    });
+    expect(validateProductAcceptanceCoverage()).toEqual([]);
   });
 });

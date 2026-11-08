@@ -2,61 +2,57 @@
 
 <h1>Inkwell</h1>
 
-<p><b>Drag ink onto paper. San Francisco's wind moves it.</b></p>
+<p><b>The wind, drawn in ink.</b></p>
 
-<p><i>A drawing toy whose drift isn't random: the pigment drifts with the wind blowing over the city right now.</i></p>
+<p><i>Brush lines follow the live wind around any city and thicken where it blows harder, beside its speed, direction and the next 24 hours.</i></p>
 
 <h6>
 
-![Data](https://img.shields.io/badge/data-Open--Meteo%20wind-3d63c9?style=flat-square)
-![React](https://img.shields.io/badge/React-19-111111?style=flat-square&logo=react&logoColor=white)
-![Vite](https://img.shields.io/badge/Vite-8-111111?style=flat-square&logo=vite&logoColor=white)
-![Toolcraft](https://img.shields.io/badge/built%20on-Toolcraft-3d63c9?style=flat-square)
-![Status](https://img.shields.io/badge/creative%20daily-experiment-555555?style=flat-square)
+![Data](https://img.shields.io/badge/data-Open--Meteo%20wind-1e1c1a?style=flat-square)
+![Canvas 2D](https://img.shields.io/badge/Canvas-2D-111111?style=flat-square)
+![Toolcraft](https://img.shields.io/badge/Toolcraft-0.0.26-111111?style=flat-square)
+![Live](https://img.shields.io/badge/live-inkwell.parthchandak.info-b8352a?style=flat-square)
 
 </h6>
 
-<a href="https://inkwell.parthchandak.info"><b>Live demo</b></a> ·
+<a href="https://inkwell.parthchandak.info"><b>Live app</b></a> ·
 <a href="#how-it-works"><b>How it works</b></a> ·
-<a href="#controls"><b>Controls</b></a> ·
 <a href="#run-it"><b>Run it</b></a>
 
 <br><br>
 
-<img src="docs/assets/readme/hero.jpg" width="100%" alt="A cream rice-paper canvas with four strokes of blue ink dabs drifting right, a 12.1 km/h west-wind readout top-left, and a dark Controls panel on the right with sliders for hue, saturation, viscosity, gravity, particle size, flow strength and particle count">
+<a href="https://inkwell.parthchandak.info"><img src="docs/assets/readme/hero.jpg" width="100%" alt="A paper-coloured poster for San Francisco: on the left the city name in serif, the local time, 5 km/h from the north, light air, Beaufort 1, a 24-hour strip of wind bars with small downwind ticks, and a vermilion seal; on the right hundreds of black brush lines sweep and curl across a framed map, following the wind field around the city"></a>
 
-<sub>Local build with live wind data, 22 October 2026. The strokes were drawn by a scripted drag.</sub>
+<sub>The default poster: San Francisco with the live forecast.</sub>
 
 </div>
 
 <br>
 
-Every drag across the canvas sheds blue ink particles that leave short brush-like trails on a
-cream rice-paper background, sink a little under gravity, and drift with the current wind over
-San Francisco from the [Open-Meteo](https://open-meteo.com/) forecast API. A calm day lets ink
-pool where you put it; a strong westerly carries it off the right edge. No API key is needed.
+Inkwell draws the wind over a place as a field of brush lines on paper. Every line follows the
+wind, tapers at both ends and thickens where the wind is stronger, so calm air reads as fine
+hairlines and a gale as heavy strokes. The left column gives the place and local time, the wind
+speed at the centre with the compass direction it comes from, its Beaufort force and gusts, and a
+strip of the next 24 hours with a small downwind tick above each hour.
+
+Pick one of eight cities (San Francisco, Wellington, Chicago, Reykjavík, Cape Town, Tokyo, Mumbai,
+Punta Arenas) or drag Latitude and Longitude. Choose the Area (City, Region or Wide), step through
+the forecast with Hours ahead, and style the Ink: colour, line spacing and brush width. The
+background can be changed (dark ink turns paper-light on dark backgrounds) or left out, and the
+poster exports as PNG or JPG at 2K, 4K or 8K.
 
 ## How it works
 
-| Input | Drives |
-|---|---|
-| `current_weather.windspeed` (km/h, 37.77° N 122.42° W) | Drift speed: 0 to 100 km/h maps to 0 to 30 px/s, scaled by Flow Strength |
-| `current_weather.winddirection` | Drift direction. Meteorological convention, so a west wind pushes ink east |
-| Your pointer | Pressing spawns 4 particles at the cursor; holding or dragging adds 2 more every frame, each with a small random impulse |
-| Viscosity slider | Trail length and how slowly each trail fades |
+Inkwell asks the free [Open-Meteo forecast API](https://open-meteo.com/en/docs) for the 10 m wind on
+a 7 × 5 grid of points around the centre in one request (24 hours of speed, direction and gusts),
+and caches it per view. Wind vectors are interpolated between the points, and evenly spaced
+streamlines are traced through them with an occupancy grid (in the style of Jobard and Lefer), then
+drawn in ten width bands. If the API cannot be reached, a clearly labelled sample breeze is shown.
 
-The page polls Open-Meteo every 60 seconds. If the request fails it falls back to a 5 km/h west
-wind and the footer stamp reads `fallback` instead of `live`. Particles fade out, leave the
-canvas, or are dropped oldest-first once the particle cap is reached.
-
-## Controls
-
-- **Ink.** Hue (0 to 360), saturation, viscosity, gravity, particle size, flow strength and
-  maximum particle count (50 to 500), plus Clear Canvas.
-- **Background.** Toggle the rice-paper fill and pick its colour; turning it off exports ink on transparency.
-- **Canvas.** Aspect ratio, output size and render scale, with zoom, undo and redo in the toolbar.
-- **Export.** Save the current canvas as PNG or JPG at 2K, 4K or 8K. Settings themselves can be
-  exported and imported as a file.
+The poster is drawn with Canvas 2D in a Web Worker at the exact zoomed backing resolution, and the
+same drawing function renders the exported image. The editor shell, panel, settings import/export,
+saved workspace and image export come from [Toolcraft](https://github.com/pixel-point/toolcraft)
+(Pixel Point, MIT).
 
 ## Run it
 
@@ -64,35 +60,31 @@ canvas, or are dropped oldest-first once the particle cap is reached.
 git clone https://github.com/parthchandak02/inkwell.git
 cd inkwell
 npm install
-npm run dev      # dev server on a free port
-npm run build    # typecheck, then static site in dist/
-npm test         # unit and integrity checks
+npm run dev              # local editor; needs Node 22+
+npm test                 # unit tests plus Toolcraft's contract checks
+npm run verify:delivery  # full functional acceptance in a real browser
 ```
 
-The build is a static `dist/` folder, deployed to Cloudflare Pages at
-[inkwell.parthchandak.info](https://inkwell.parthchandak.info).
+The live version is a static build (`npm run build`, then `dist/`) on Cloudflare Pages.
 
 <details>
 <summary><b>Project layout</b></summary>
 
 ```
-src/app/ink-simulation.ts   Particle physics and canvas drawing
-src/app/wind-data.ts        Open-Meteo fetch, fallback, wind-vector maths
-src/app/app-schema.ts       Every control in the panel, declared for Toolcraft
-src/app/inkwell-chrome.tsx  Wind readout and on-canvas captions
-src/app/inkwell-export.ts   PNG/JPG export at 2K, 4K, 8K
-src/toolcraft/              Toolcraft runtime and UI components (vendored)
-e2e/                        Playwright browser and performance tests
-brief.md                    The original creative brief and encoding contract
+src/inkwell/wind-data.ts         Grid request, parsing, cache, offline sample
+src/inkwell/inkwell-draw.ts      Wind sampling, streamlines and the whole poster
+src/inkwell/InkwellCanvas.tsx    The live canvas: worker raster at the exact backing size
+src/inkwell/inkwell-controls.ts  Place, Wind and Ink controls; city shortcuts
+src/app/app-schema.ts            Toolcraft schema: sections, canvas, image export
+src/app/app-acceptance-data.ts   What every control must visibly do (checked in a real browser)
+e2e/product-inkwell-*.spec.ts    Browser acceptance tests, one file per area (API stubbed)
+src/toolcraft/                   Vendored Toolcraft runtime (do not edit)
 ```
-
-The app shell, panel and toolbar come from Pixel Point's Toolcraft starter. That code is covered
-by [LICENSE.md](LICENSE.md) and [NOTICE.md](NOTICE.md); the ink simulation and wind code are this project's own.
 
 </details>
 
 <br>
 
 <div align="center">
-<sub>Built with React, Vite, Tailwind and Toolcraft. Wind data from Open-Meteo.</sub>
+<sub>Built with Toolcraft, React and Canvas 2D. Wind from Open-Meteo.</sub>
 </div>

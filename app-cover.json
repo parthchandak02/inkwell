@@ -1,0 +1,11 @@
+{
+  "version": 1,
+  "title": "Inkwell",
+  "asset": "public/toolcraft/cover.png",
+  "generation": {
+    "kind": "app-composition",
+    "source": "src/app/app-composition.tsx",
+    "state": "app-cover-state.json",
+    "description": "Actual app export (4K PNG) of the default poster: the wind around San Francisco from the live Open-Meteo forecast on 8 November 2026, Region area, current hour, black ink on paper; 16:9 output, no editor UI."
+  }
+}

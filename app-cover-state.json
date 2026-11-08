@@ -1,0 +1,17 @@
+{
+  "values": {
+    "appearance.background": "#F2EDE3",
+    "export.image.format": "png",
+    "export.image.resolution": "4k",
+    "export.includeBackground": true,
+    "ink.brush": 1.4,
+    "ink.color": "#1E1C1A",
+    "ink.spacing": 22,
+    "place.latitude": 37.77,
+    "place.longitude": -122.42,
+    "wind.area": "region",
+    "wind.hour": 0
+  },
+  "canvas": { "size": { "width": 1920, "height": 1080 } },
+  "data": "Live Open-Meteo forecast for a 7x5 grid around 37.77, -122.42 at capture time"
+}
